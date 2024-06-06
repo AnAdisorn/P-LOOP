@@ -37,7 +37,7 @@
 #
 # Prepare your environment
 #
-testssh
+
 # causes jobs to fail if one command fails - makes failed jobs easier to find with tools like sacct
 set -e
 
