@@ -25,14 +25,14 @@
 # Feel free to give your job a good name to better identify it later
 # the same name expansions as for the ourput and error path apply here as well
 # see below for additional information
-#SBATCH --job-name="<my_job_name>"
+#SBATCH --job-name="<job_name>"
 
 # Always try to use absolute paths for your output and error files
 # IF you only specify an output file all error messages will automaticly be redirected in there
 # You can utilize name expansion to make sure each job has a uniq output file if the file already exists 
 # Slurm will delete all the content that was there before before writing to this file so beware.
-#SBATCH --output=<slurm_dir>/output/<my_job_name>-%j.out
-#SBATCH --error=<slurm_dir>/errors/<my_job_name>-%j.err
+#SBATCH --output=<slurm_dir>/output/<job_name>-%j.out
+#SBATCH --error=<slurm_dir>/errors/<job_name>-%j.err
 
 #
 # Prepare your environment
@@ -56,11 +56,11 @@ cd $scratch
 # Copy your program (and maybe input files if you need them)
 cp $project/ .
 
-python3 <code_name> <args>
+<execution_command>
 
 # copy results to an accessable location
 # only copy things you really need
-cp -r results $project/results/SLURM_JOB_ID 
+cp -r results $project/results/$SLURM_JOB_ID 
 
 # Clean up after yourself
 cd
