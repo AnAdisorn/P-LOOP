@@ -76,9 +76,9 @@ class WorkerInterface(mp.Process):
         while not self.end_event.is_set():
             # Wait for the next set of parameter values to test.
             params_dict = self.params_out_queue.get()
-            param, cost_dict = self.get_next_cost_dict(params_dict)
+            param_dict, cost_dict = self.get_next_cost_dict(params_dict)
             # Send the results back to the controller.
-            self.costs_in_queue.put((param, cost_dict))
+            self.costs_in_queue.put((param_dict, cost_dict))
 
     def get_next_cost_dict(self, param_dict):
         """
@@ -92,19 +92,20 @@ class WorkerInterface(mp.Process):
         this method, the optimization will halt.
 
         Args:
-            params_dict (dictionary): A dictionary containing the parameters.
-                Use `params_dict['params']` to access them.
+            params_dict (dictionary): A dictionary containing the parameters
+                AND run's index.
+                Use `params_dict['params']` and `params_dict['run_index']`
+                to access them.
 
         Returns:
-            param (array): return the in-param as reference 
+            param_dict (dictionary): return the in-param_dict as reference
             cost_dict (dictionary): The cost and other properties derived from
                 the experiment when it was run with the parameters. If just a
                 cost was produced provide `{'cost': [float]}`, if you also have
                 an uncertainty provide `{'cost': [float], 'uncer': [float]}`.
                 If the run was bad you can simply provide `{'bad': True}`.
-                If you have run_index, provide {'run_index': int}. 
                 For completeness you can always provide all four using
-                `{'cost': [float], 'uncer':[float], 'bad': [bool], 'run_index': int}`. 
+                `{'cost': [float], 'uncer':[float], 'bad': [bool]}`.
                 Any extra keys provided will also be saved by the controller.
         """
         pass

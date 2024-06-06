@@ -1,11 +1,16 @@
 from interfaces import ManagerInterface, WorkerInterface
 from learners import Learner, GaussianProcessLearner
-from utils import rng
+from utils import rng, save_archive_dict, load_archive_dict
+import logging
 import datetime
+from pathlib import Path
 
 
 class Controller:
     """Base class for all Controller"""
+
+    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "controller_archive"
+    _DEFAULT_SAVE_PREFIX = "run_"
 
     def __init__(
         self,
@@ -18,8 +23,12 @@ class Controller:
         target_cost=float("-inf"),
         max_num_runs_without_better_params=float("+inf"),
         max_duration=float("+inf"),
+        controller_archive_dir=None,
         **kwargs,
     ):
+        # Make logger
+        self.log = logging.getLogger(__name__)
+
         # Halting options.
         self.max_num_runs = float(max_num_runs)
         self.target_cost = float(target_cost)
@@ -29,16 +38,19 @@ class Controller:
         self.max_duration = float(max_duration)
 
         # Variables that are included in the controller
-        self.num_in_costs = 0
+        self.num_in_costs = 0  # number of costs received from interaface
+        self.best_params = float("nan")
         self.best_cost = float("inf")
         self.best_uncer = float("nan")
-        self.best_index = float("nan")
-        self.best_params = float("nan")
+        self.best_run_index = float("nan")
+        self.best_extras
 
         # Variables that are used internally
+        # curr-prefix means current data from interface
+        self.run_index = 0  # used to count number of parameters sent to interface
         self.halt_reasons = []
         self.num_last_best_cost = 0
-        self.curr_param = None
+        self.curr_params = None
         self.curr_cost = None
         self.curr_uncer = None
         self.curr_bad = None
@@ -69,11 +81,68 @@ class Controller:
         self.learner_costs_queue = self.learner.costs_in_queue
         self.end_learner = self.learner.end_event
 
+        # Configure archive
+        if controller_archive_dir is None:
+            self.archive_dir = self._DEFAULT_ARCHIVE_DIR
+            if self.archive_dir.is_dir():
+                self.log.error(
+                    "Controller archive directory already exists, terminate as there is risk in undecided overwrite"
+                )
+                raise ValueError
+        else:
+            self.archive_dir = Path(controller_archive_dir)
+            if self.archive_dir.is_dir():
+                self.log(
+                    "Given controller archive directory already exists, load all the attributes"
+                )
+                self.load_archive()
+
         # Remaining kwargs
         self.remaining_kwargs = kwargs
 
         # Start timer
         self.start_datetime = datetime.datetime.now()
+
+    def save_to_archive(self):
+        """save run attributes to archive"""
+        save_dict = {
+            "num_in_costs": self.num_in_costs,
+            "run_index": self.run_index,
+            # current
+            "halt_reasons": self.halt_reasons,
+            "num_last_best_cost": self.num_last_best_cost,
+            "curr_params": self.curr_params,
+            "curr_run_index": self.curr_run_index,
+            "curr_cost": self.curr_cost,
+            "curr_uncer": self.curr_uncer,
+            "curr_bad": self.curr_bad,
+            "curr_extras": self.curr_extras,
+            # best
+            "best_params": self.best_params,
+            "best_cost": self.best_cost,
+            "best_uncer": self.best_uncer,
+            "best_run_index": self.best_run_index,
+            "best_extras": self.best_extras,
+        }
+        save_archive_dict(
+            self.archive_dir,
+            save_dict,
+            f"{self._DEFAULT_SAVE_PREFIX}{self.num_in_costs}.npy",
+        )
+
+    def load_archive(self):
+        # search for the latest run
+        save_name = sorted(
+            [
+                f.name
+                for f in self.archive_dir.glob(f"{self._DEFAULT_SAVE_PREFIX}*.npy")
+            ],
+            key=lambda name: int(name.split("_")[-1][0:-4]),
+        )[-1]
+        # load save dictionary and set to attributes
+        load_dict = load_archive_dict(self.archive_dir, save_name)
+        for key, item in load_dict.items():
+            setattr(self, key, item)
 
     def check_end_conditions(self):
         """
@@ -120,25 +189,42 @@ class Controller:
 
     def _put_params_out_dict(self, params):
         """Put param/params to interface queue"""
-        # single param
+        # single params
         if params.ndim == 1:
-            param_dict = {"params": params}
+            param_dict = {"params": params, "run_index": self.run_index}
             self.params_out_queue.put(param_dict)
-        # multiple params
+            self.run_index += 1
+        # multiple set of params
         else:
             for param in params:
-                param_dict = {"params": param}
+                param_dict = {"params": param, "run_index": self.run_index}
                 self.params_out_queue.put(param_dict)
+                self.run_index += 1
 
     def _get_cost_in_dict(self):
+        # update run count
         self.num_in_costs += 1
-        param, cost_dict = self.costs_in_queue.get()
-        self.curr_param = param
+        self.num_last_best_cost += 1
+        # take in costs information from interface via queue
+        param_dict, cost_dict = self.costs_in_queue.get()
+        self.curr_params = param_dict
+        self.curr_run_index = int(param_dict.pop("run_index", None))
         self.curr_cost = float(cost_dict.pop("cost", float("nan")))
         self.curr_uncer = float(cost_dict.pop("uncer", 0))
         self.curr_bad = bool(cost_dict.pop("bad", False))
-        self.curr_run_index = int(cost_dict.pop("run_index", None))
         self.curr_extras = cost_dict
+        # update the best costs attributes
+        if self.curr_cost < self.best_cost:
+            self.best_params = self.curr_params
+            self.best_cost = self.curr_cost
+            self.best_uncer = self.curr_uncer
+            self.best_run_index = self.curr_run_index
+            self.best_extras = self.curr_extras
+            # reset number of run after previous best costs
+            self.num_last_best_cost = 0
+
+        # backup to archive
+        self.save_to_archive()
 
     def _send_to_learner(self):
         """
@@ -149,7 +235,7 @@ class Controller:
         else:
             cost = self.curr_cost
         message = (
-            self.curr_param,
+            self.curr_params,
             cost,
             self.curr_uncer,
             self.curr_bad,

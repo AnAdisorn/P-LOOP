@@ -32,7 +32,7 @@ print(
 )
 print("Check scaler: ", gpl.params_scaler.scale_, gpl.params_scaler.data_min_)
 # %%
-N = 150
+N = 50
 # cost_func = lambda params: -np.sum(np.sinc(params * 5))
 cost_func = rastrigin
 params = (np.random.rand(N * 2).reshape((N, 2)) - 0.5) * 2
@@ -100,9 +100,12 @@ for i in range(1, N):
     # plt.scatter(X[:, :, 0], X[:, :, 1], c=Y_mean)
     # plt.scatter(gpl.all_params[-1, 0], gpl.all_params[-1, 1], c="r")
     # plt.show()
+    print("i = ", i)
 
 Y_mean = gpl.predict_cost(X.reshape(-1, 2)).reshape(M, M)
 plt.scatter(gpl.all_params[:, 0], gpl.all_params[:, 1], c=gpl.all_costs)
 plt.show()
 plt.scatter(X[:, :, 0], X[:, :, 1], c=Y_mean)
 plt.show()
+
+# %%

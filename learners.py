@@ -5,7 +5,8 @@ import scipy.optimize as so
 import sklearn.gaussian_process as skg
 import sklearn.gaussian_process.kernels as skk
 import sklearn.preprocessing as skp
-from utils import rng, norm, safe_cast_to_array
+from utils import rng, norm, safe_cast_to_array, save_archive_dict, load_archive_dict
+import logging
 import datetime
 from pathlib import Path
 
@@ -14,9 +15,21 @@ from pathlib import Path
 class Learner(mp.Process):
     "Base class for learner"
 
-    def __init__(self, num_params=None, min_boundary=None, max_boundary=None, **kwargs):
+    _DEFAULT_SAVE_NAME = "search_storage"
+
+    def __init__(
+        self,
+        num_params=None,
+        min_boundary=None,
+        max_boundary=None,
+        learner_archive_dir=None,
+        **kwargs,
+    ):
 
         super(Learner, self).__init__()
+
+        # Make logger
+        self.log = logging.getLogger(__name__)
 
         # Set up Queues to communicate with controller
         self.params_out_queue = mp.Queue()
@@ -46,9 +59,47 @@ class Learner(mp.Process):
         self.worst_cost = -float("inf")
         self.worst_index = None
 
+        # Configure archive
+        if learner_archive_dir is None:
+            self.archive_dir = self._DEFAULT_ARCHIVE_DIR
+            if self.archive_dir.is_dir():
+                self.log.error(
+                    "Learner archive directory already exists, terminate as there is risk in undecided overwrite"
+                )
+                raise ValueError
+        else:
+            self.archive_dir = Path(learner_archive_dir)
+            if self.archive_dir.is_dir():
+                self.log(
+                    "Given learner archive directory already exists, load all the attributes"
+                )
+                self.load_archive()
+
         #  Etc
         self.start_datetime = datetime.datetime.now()
         self.remaining_kwargs = kwargs
+
+    def save_archive(self):
+        save_dict = {
+            "all_params": self.all_params,
+            "all_costs": self.all_costs,
+            "all_run_indices": self.all_run_indices,
+            "best_params": self.best_params,
+            "best_cost": self.best_cost,
+            "best_index": self.best_index,
+            "worst_params": self.worst_params,
+            "worst_cost": self.worst_cost,
+            "worst_index": self.worst_index,
+        }
+        save_archive_dict(self.archive_dir, save_dict, f"{self._DEFAULT_SAVE_NAME}.npy")
+
+    def load_archive(self):
+        # load save dictionary and set to attributes
+        load_dict = load_archive_dict(
+            self.archive_dir, f"{self._DEFAULT_SAVE_NAME}.npy"
+        )
+        for key, item in load_dict.items():
+            setattr(self, key, item)
 
     def _update_run_data_attributes(self, param, cost, uncer, run_index):
         """
@@ -86,10 +137,14 @@ class Learner(mp.Process):
             self.worst_params = param
             self.worst_index = run_index
 
+        # backup to archive
+        self.save_to_archive()
+
 
 # %%
 class GaussianProcessLearner(Learner):
 
+    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "gaussian_learner_archive"
     _DEFAULT_SCALED_LENGTH_SCALE = 1e-1
     _DEFAULT_SCALED_LENGTH_SCALE_BOUNDS = np.array([1e-3, 1e1])
     _DEFAULT_ALPHA = 1e-8
@@ -102,7 +157,7 @@ class GaussianProcessLearner(Learner):
         noise_level=None,
         noise_level_bounds=None,
         update_hyperparameters=True,
-        **kwargs
+        **kwargs,
     ):
 
         super(GaussianProcessLearner, self).__init__(**kwargs)
@@ -164,7 +219,7 @@ class GaussianProcessLearner(Learner):
                 self.noise_level_bounds = safe_cast_to_array(noise_level_bounds)
 
     def run(self):
-        print("Run Learner")
+        self.log("Run GP learner")
         while not self.end_event.is_set():
             self.get_params_and_costs()
             self.fit_gaussian_process()
@@ -371,6 +426,7 @@ class GaussianProcessLearner(Learner):
     def predict_biased_cost(self, params, perform_scaling=True):
         """
         Predict the biased cost at the given parameters.
+        AKA Acquisition function
 
         The biased cost is a weighted sum of the predicted cost and the
         uncertainty of the prediced cost. In particular, the bias function is:
@@ -421,7 +477,7 @@ class GaussianProcessLearner(Learner):
             best_cost = self.best_cost
         else:
             best_cost = self.cost_scaler.transform([[self.best_cost]])[0, 0]
-        delta = best_cost * (1 + 0. / 100.0) - cost
+        delta = best_cost * (1 + 0.0 / 100.0) - cost
         ratio = delta / uncertainty
         biased_cost = -(delta * norm.cdf(ratio) + uncertainty * norm.pdf(ratio))
 

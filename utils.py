@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import norm
+from pathlib import Path
 
 # Create a random number generator that can be used throughout P-LOOP
 # could also seed this generator if they want to fix the random numbers
@@ -24,3 +25,10 @@ def safe_cast_to_array(in_array):
         out_array = np.array([out_array[()]])
 
     return out_array
+
+
+def save_archive_dict(archive_dir:Path, save_dict, save_name):
+    np.save(archive_dir/save_name, save_dict)
+
+def load_archive_dict(archive_dir:Path, save_name):
+    return np.load(archive_dir / save_name).item()
