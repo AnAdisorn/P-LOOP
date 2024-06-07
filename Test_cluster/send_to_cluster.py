@@ -1,7 +1,7 @@
 #%%
 import subprocess
 from pathlib import Path
-import test
+
 #%%
 def send_to_cluster(slurm_template_path, job_name, project_dir, execution_command, results_dir=None):
     # convert all directories to Path type
