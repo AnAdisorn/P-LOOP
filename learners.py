@@ -222,7 +222,7 @@ class GaussianProcessLearner(Learner):
                 self.noise_level_bounds = safe_cast_to_array(noise_level_bounds)
 
     def run(self):
-        self.log.info("Run GP learner")
+        self.log.info("Lerner: start running GP learner")
         while not self.end_event.is_set():
             self.get_params_and_costs()
             self.fit_gaussian_process()
@@ -266,22 +266,32 @@ class GaussianProcessLearner(Learner):
 
     def create_gaussian_process(self):
         """
-        Create a Gaussian process.
+        Create a Gaussian process regressor.
+
+        This function defines and initializes a Gaussian Process (GP) regressor
+        object. The GP regressor will be used to model the relationship between
+        input features and target values.
+
         """
-        gp_kernel = skk.RBF(
+
+        # Define the kernel function
+        gp_kernel = skk.RBF(  # Radial Basis Function kernel
             length_scale=self.scaled_length_scale,
             length_scale_bounds=self.scaled_length_scale_bounds,
         )
+
+        # Add white noise kernel if cost has noise
         if self.cost_has_noise:
             white_kernel = skk.WhiteKernel(
                 noise_level=self.scaled_noise_level,
                 noise_level_bounds=self.scaled_noise_level_bounds,
             )
-            gp_kernel += white_kernel
-            alpha = self.scaled_uncers**2
+            gp_kernel += white_kernel  # Combine RBF and white noise kernels
+            alpha = self.scaled_uncers**2  # Set alpha based on uncertainties
         else:
-            alpha = self._DEFAULT_ALPHA
+            alpha = self._DEFAULT_ALPHA  # Use default alpha if no noise
 
+        # Choose optimizer based on hyperparameter update setting
         if self.update_hyperparameters:
             self.gaussian_process = skg.GaussianProcessRegressor(
                 alpha=alpha,
