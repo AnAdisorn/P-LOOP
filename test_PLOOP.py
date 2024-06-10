@@ -50,7 +50,7 @@ def main():
     # M-LOOP can be run with three commands
 
     # First create your interface
-    interface = CustomInterface()
+    interface = CustomInterface
     # Next create the controller. Provide it with your interface and any options you want to set
     controller = GaussianProcessController(
         workerinterface = interface,
