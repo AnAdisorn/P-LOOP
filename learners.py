@@ -234,7 +234,7 @@ class GaussianProcessLearner(Learner):
         Get the parameters and costs from the queue.
         """
         # First get, block until get something
-        (param, cost, uncer, run_index) = self.costs_in_queue.get()
+        (param, cost, uncer, _, run_index) = self.costs_in_queue.get()
         self._update_run_data_attributes(param, cost, uncer, run_index)
         # # If more costs in queue, get them
         # while not self.costs_in_queue.empty():
