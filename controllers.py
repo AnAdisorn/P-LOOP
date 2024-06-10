@@ -9,7 +9,7 @@ from pathlib import Path
 class Controller:
     """Base class for all Controller"""
 
-    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "controller_archive"
+    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "Controller_archive"
     _DEFAULT_SAVE_PREFIX = "run_"
 
     def __init__(
@@ -99,6 +99,8 @@ class Controller:
                     "Controller: given controller archive directory already exists, load all the attributes"
                 )
                 self.load_archive()
+            else:
+                self.log.error(f"Controller: cannot find archive directory: {self.archive_dir}")
 
         # Remaining kwargs
         self.remaining_kwargs = kwargs

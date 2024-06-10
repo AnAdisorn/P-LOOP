@@ -148,7 +148,7 @@ class Learner(mp.Process):
 # %%
 class GaussianProcessLearner(Learner):
 
-    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "gaussian_learner_archive"
+    _DEFAULT_ARCHIVE_DIR = Path.cwd() / "Gaussian_learner_archive"
     _DEFAULT_SCALED_LENGTH_SCALE = 1e-1
     _DEFAULT_SCALED_LENGTH_SCALE_BOUNDS = np.array([1e-3, 1e1])
     _DEFAULT_ALPHA = 1e-8
@@ -161,6 +161,7 @@ class GaussianProcessLearner(Learner):
         noise_level=None,
         noise_level_bounds=None,
         update_hyperparameters=True,
+        num_workers=None,
         **kwargs,
     ):
 
@@ -170,8 +171,11 @@ class GaussianProcessLearner(Learner):
         self.search_precision = 1.0e-6
         self.parameter_searches = max(10, self.num_params)
         self.hyperparameter_searches = max(10, self.num_params)
-        self.bias_func_cycle = 4
-        self.bias_func_uncer_factor = [0.0, 1.0, 2.0, 3.0]
+        self.bias_func_cycle = num_workers
+        self.bias_func_uncer_factor = np.linspace(0, 3, num_workers)
+        self.uncer_bias = self.bias_func_uncer_factor[0]
+        self.bias_best_cost_factor = np.linspace(0, 100, num_workers)
+        self.best_cost_bias = self.bias_best_cost_factor[0]
         self.generation_num = self.bias_func_cycle
         self.params_count = 0
 
@@ -436,9 +440,9 @@ class GaussianProcessLearner(Learner):
         """
         Set the constants for the cost bias function.
         """
-        self.uncer_bias = self.bias_func_uncer_factor[
-            self.params_count % self.bias_func_cycle
-        ]
+        i = self.params_count % self.bias_func_cycle
+        self.uncer_bias = self.bias_func_uncer_factor[i]
+        self.best_cost_bias = self.bias_best_cost_factor[i]
 
     def predict_biased_cost(self, params, perform_scaling=True):
         """
@@ -494,7 +498,7 @@ class GaussianProcessLearner(Learner):
             best_cost = self.best_cost
         else:
             best_cost = self.cost_scaler.transform([[self.best_cost]])[0, 0]
-        delta = best_cost * (1 + 0.0 / 100.0) - cost
+        delta = best_cost * (1 + self.best_cost_bias / 100) - cost
         ratio = delta / uncertainty
         biased_cost = -(delta * norm.cdf(ratio) + uncertainty * norm.pdf(ratio))
 

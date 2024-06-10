@@ -25,22 +25,24 @@ class CustomInterface(WorkerInterface):
     # You must include the get_next_cost_dict method in your class
     # this method is called whenever M-LOOP wants to run an experiment
     def get_next_cost_dict(self, params_dict):
-        # Get parameters from the provided dictionary
         params = params_dict["params"]
-
-        # Here you can include the code to run your experiment given a particular set of parameters
-        # In this example we will just evaluate a sum of sinc functions
-        cost = -np.sum(np.sinc(params - self.minimum_params))
+        x, y = params
+        # Rastrigin function for 2D optimization.
+        A = 10
+        cost = (
+            A * 2 + x**2 - A * np.cos(5 * np.pi * x) + y**2 - A * np.cos(5 * np.pi * y)
+        )
         # There is no uncertainty in our result
         uncer = 0
         # The evaluation will always be a success
         bad = False
+        # Add a small time delay to mimic a real experiment
+        time.sleep(1)
+
         # The cost, uncertainty and bad boolean must all be returned as a dictionary
         # You can include other variables you want to record as well if you want
         cost_dict = {"cost": cost, "uncer": uncer, "bad": bad}
-        # Add a small time delay to mimic a real experiment
-        time.sleep(1)
-        return params_dict, cost_dict
+        return cost_dict
 
 
 def main():
@@ -50,12 +52,11 @@ def main():
     interface = CustomInterface
     # Next create the controller. Provide it with your interface and any options you want to set
     controller = GaussianProcessController(
-        workerinterface = interface,
-        max_num_runs=1000,
-        target_cost=-2.9999,
-        num_params=3,
-        min_boundary=[-2, -2, -2],
-        max_boundary=[2, 2, 2],
+        workerinterface=interface,
+        max_num_runs=200,
+        num_params=2,
+        min_boundary=[-1, -1],
+        max_boundary=[1, 1],
         cost_has_noise=False,
         num_workers=5,
     )

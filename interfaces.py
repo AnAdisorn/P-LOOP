@@ -75,9 +75,9 @@ class WorkerInterface(mp.Process):
             # Wait for the next set of parameter values to test.
             try:
                 params_dict = self.params_out_queue.get(timeout=1)
-                param_dict, cost_dict = self.get_next_cost_dict(params_dict)
+                cost_dict = self.get_next_cost_dict(params_dict)
                 # Send the results back to the controller.
-                self.costs_in_queue.put((param_dict, cost_dict))
+                self.costs_in_queue.put((params_dict, cost_dict))
             except queue.Empty:
                 continue
 
@@ -99,7 +99,6 @@ class WorkerInterface(mp.Process):
                 to access them.
 
         Returns:
-            param_dict (dictionary): return the in-param_dict as reference
             cost_dict (dictionary): The cost and other properties derived from
                 the experiment when it was run with the parameters. If just a
                 cost was produced provide `{'cost': [float]}`, if you also have

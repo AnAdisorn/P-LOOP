@@ -29,13 +29,13 @@ class CustomInterface(mli.Interface):
     # You must include the get_next_cost_dict method in your class
     # this method is called whenever M-LOOP wants to run an experiment
     def get_next_cost_dict(self, params_dict):
-
-        # Get parameters from the provided dictionary
         params = params_dict["params"]
-
-        # Here you can include the code to run your experiment given a particular set of parameters
-        # In this example we will just evaluate a sum of sinc functions
-        cost = -np.sum(np.sinc(params - self.minimum_params))
+        x, y = params
+        # Rastrigin function for 2D optimization.
+        A = 10
+        cost = (
+            A * 2 + x**2 - A * np.cos(5 * np.pi * x) + y**2 - A * np.cos(5 * np.pi * y)
+        )
         # There is no uncertainty in our result
         uncer = 0
         # The evaluation will always be a success
@@ -57,11 +57,11 @@ def main():
     # Next create the controller. Provide it with your interface and any options you want to set
     controller = mlc.create_controller(
         interface,
-        max_num_runs=1000,
-        target_cost=-2.99,
-        num_params=3,
-        min_boundary=[-2, -2, -2],
-        max_boundary=[2, 2, 2],
+        max_num_runs=100,
+        num_params=2,
+        min_boundary=[-1, -1],
+        max_boundary=[1, 1],
+        cost_has_noise=False,
     )
     # To run M-LOOP and find the optimal parameters just use the controller method optimize
     controller.optimize()
