@@ -272,6 +272,7 @@ class Controller:
         self.end_managerinterface.set()
         self.learner.join()
         self.managerinterface.join()
+        self.save_to_archive()
 
 
 class GaussianProcessController(Controller):

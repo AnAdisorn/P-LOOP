@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import queue
 import threading
 import logging
 
@@ -72,10 +73,13 @@ class WorkerInterface(mp.Process):
         """
         while not self.end_event.is_set():
             # Wait for the next set of parameter values to test.
-            params_dict = self.params_out_queue.get()
-            param_dict, cost_dict = self.get_next_cost_dict(params_dict)
-            # Send the results back to the controller.
-            self.costs_in_queue.put((param_dict, cost_dict))
+            try:
+                params_dict = self.params_out_queue.get(timeout=1)
+                param_dict, cost_dict = self.get_next_cost_dict(params_dict)
+                # Send the results back to the controller.
+                self.costs_in_queue.put((param_dict, cost_dict))
+            except queue.Empty:
+                continue
 
     def get_next_cost_dict(self, param_dict):
         """

@@ -25,7 +25,6 @@ class CustomInterface(WorkerInterface):
     # You must include the get_next_cost_dict method in your class
     # this method is called whenever M-LOOP wants to run an experiment
     def get_next_cost_dict(self, params_dict):
-
         # Get parameters from the provided dictionary
         params = params_dict["params"]
 
@@ -36,12 +35,11 @@ class CustomInterface(WorkerInterface):
         uncer = 0
         # The evaluation will always be a success
         bad = False
-        # Add a small time delay to mimic a real experiment
-        time.sleep(1)
-
         # The cost, uncertainty and bad boolean must all be returned as a dictionary
         # You can include other variables you want to record as well if you want
         cost_dict = {"cost": cost, "uncer": uncer, "bad": bad}
+        # Add a small time delay to mimic a real experiment
+        time.sleep(1)
         return params_dict, cost_dict
 
 
@@ -59,7 +57,7 @@ def main():
         min_boundary=[-2, -2, -2],
         max_boundary=[2, 2, 2],
         cost_has_noise=False,
-        num_workers=10,
+        num_workers=5,
     )
     # To run M-LOOP and find the optimal parameters just use the controller method optimize
     controller.optimize()

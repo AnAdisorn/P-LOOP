@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 import multiprocessing as mp
+import queue
 import scipy.optimize as so
 import sklearn.gaussian_process as skg
 import sklearn.gaussian_process.kernels as skk
@@ -224,17 +225,20 @@ class GaussianProcessLearner(Learner):
     def run(self):
         self.log.info("Lerner: start running GP learner")
         while not self.end_event.is_set():
-            self.get_params_and_costs()
-            self.fit_gaussian_process()
-            next_params = self.find_next_parameters()
-            self.params_out_queue.put(next_params)
+            try:
+                self.get_params_and_costs()
+                self.fit_gaussian_process()
+                next_params = self.find_next_parameters()
+                self.params_out_queue.put(next_params)
+            except queue.Empty:
+                continue
 
     def get_params_and_costs(self):
         """
         Get the parameters and costs from the queue.
         """
         # First get, block until get something
-        (param, cost, uncer, _, run_index) = self.costs_in_queue.get()
+        (param, cost, uncer, _, run_index) = self.costs_in_queue.get(timeout=1)
         self._update_run_data_attributes(param, cost, uncer, run_index)
         # # If more costs in queue, get them
         # while not self.costs_in_queue.empty():

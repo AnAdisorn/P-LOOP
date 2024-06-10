@@ -58,7 +58,7 @@ def main():
     controller = mlc.create_controller(
         interface,
         max_num_runs=1000,
-        target_cost=-2.9999,
+        target_cost=-2.99,
         num_params=3,
         min_boundary=[-2, -2, -2],
         max_boundary=[2, 2, 2],
