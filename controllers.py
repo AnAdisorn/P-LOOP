@@ -89,6 +89,9 @@ class Controller:
                     "Controller archive directory already exists, terminate as there is risk in undecided overwrite"
                 )
                 raise ValueError
+            else:
+                self.log.info(f"Create controller archive: {self.archive_dir}")
+                self.archive_dir.mkdir()
         else:
             self.archive_dir = Path(controller_archive_dir)
             if self.archive_dir.is_dir():

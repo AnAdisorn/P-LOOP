@@ -43,7 +43,7 @@ class CustomInterface(WorkerInterface):
         # The cost, uncertainty and bad boolean must all be returned as a dictionary
         # You can include other variables you want to record as well if you want
         cost_dict = {"cost": cost, "uncer": uncer, "bad": bad}
-        return cost_dict
+        return params_dict, cost_dict
 
 
 def main():
