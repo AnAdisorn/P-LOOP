@@ -31,4 +31,4 @@ def save_archive_dict(archive_dir:Path, save_dict, save_name):
     np.save(archive_dir/save_name, save_dict)
 
 def load_archive_dict(archive_dir:Path, save_name):
-    return np.load(archive_dir / save_name).item()
+    return np.load(archive_dir / save_name, allow_pickle=True).item()

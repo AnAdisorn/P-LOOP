@@ -86,7 +86,7 @@ class Controller:
             self.archive_dir = self._DEFAULT_ARCHIVE_DIR
             if self.archive_dir.is_dir():
                 self.log.error(
-                    "Controller archive directory already exists, terminate as there is risk in undecided overwrite"
+                    "Controller: archive directory already exists, terminate as there is risk in undecided overwrite"
                 )
                 raise ValueError
             else:
@@ -96,7 +96,7 @@ class Controller:
             self.archive_dir = Path(controller_archive_dir)
             if self.archive_dir.is_dir():
                 self.log.info(
-                    "Given controller archive directory already exists, load all the attributes"
+                    "Controller: given controller archive directory already exists, load all the attributes"
                 )
                 self.load_archive()
 
@@ -209,9 +209,9 @@ class Controller:
         self.num_in_costs += 1
         self.num_last_best_cost += 1
         # take in costs information from interface via queue
-        param_dict, cost_dict = self.costs_in_queue.get()
-        self.curr_params = param_dict
-        self.curr_run_index = int(param_dict.pop("run_index", None))
+        params_dict, cost_dict = self.costs_in_queue.get()
+        self.curr_params = params_dict["params"]
+        self.curr_run_index = int(params_dict.pop("run_index", None))
         self.curr_cost = float(cost_dict.pop("cost", float("nan")))
         self.curr_uncer = float(cost_dict.pop("uncer", 0))
         self.curr_bad = bool(cost_dict.pop("bad", False))

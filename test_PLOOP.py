@@ -1,8 +1,7 @@
 # %%
 # PLOOP
 from controllers import GaussianProcessController
-from learners import GaussianProcessLearner
-from interfaces import ManagerInterface, WorkerInterface
+from interfaces import WorkerInterface
 
 # Other imports
 import numpy as np
