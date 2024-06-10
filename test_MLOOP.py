@@ -1,16 +1,20 @@
-# %%
-# PLOOP
-from controllers import GaussianProcessController
-from interfaces import WorkerInterface
+# Imports for python 2 compatibility
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
+
+# Imports for M-LOOP
+import mloop.interfaces as mli
+import mloop.controllers as mlc
+import mloop.visualizations as mlv
 
 # Other imports
 import numpy as np
 import time
 
 
-# %%
 # Declare your custom class that inherits from the Interface class
-class CustomInterface(WorkerInterface):
+class CustomInterface(mli.Interface):
 
     # Initialization of the interface, including this method is optional
     def __init__(self):
@@ -42,24 +46,22 @@ class CustomInterface(WorkerInterface):
         # The cost, uncertainty and bad boolean must all be returned as a dictionary
         # You can include other variables you want to record as well if you want
         cost_dict = {"cost": cost, "uncer": uncer, "bad": bad}
-        return params_dict, cost_dict
+        return cost_dict
 
 
 def main():
     # M-LOOP can be run with three commands
 
     # First create your interface
-    interface = CustomInterface
+    interface = CustomInterface()
     # Next create the controller. Provide it with your interface and any options you want to set
-    controller = GaussianProcessController(
-        workerinterface = interface,
+    controller = mlc.create_controller(
+        interface,
         max_num_runs=1000,
         target_cost=-2.9999,
         num_params=3,
         min_boundary=[-2, -2, -2],
         max_boundary=[2, 2, 2],
-        cost_has_noise=False,
-        num_workers=10,
     )
     # To run M-LOOP and find the optimal parameters just use the controller method optimize
     controller.optimize()
@@ -67,6 +69,9 @@ def main():
     # The results of the optimization will be saved to files and can also be accessed as attributes of the controller.
     print("Best parameters found:")
     print(controller.best_params)
+
+    # You can also run the default sets of visualizations for the controller with one command
+    mlv.show_all_default_visualizations(controller)
 
 
 # Ensures main is run when this code is run as a script
