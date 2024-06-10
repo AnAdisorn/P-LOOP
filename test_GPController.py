@@ -4,11 +4,11 @@ from interfaces import ManagerInterface, WorkerInterface
 import multiprocessing as mp
 
 # Try crating learner
-learner = GaussianProcessLearner(
-    num_params=2,
-    min_boundary=[-1, -1],
-    max_boundary=[1, 1],
-)
+# learner = GaussianProcessLearner(
+#     num_params=2,
+#     min_boundary=[-1, -1],
+#     max_boundary=[1, 1],
+# )
 # Try crating workerinterface
 workerinterface = WorkerInterface
 # Pass worker interface to controller

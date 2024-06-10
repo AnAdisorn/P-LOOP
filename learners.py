@@ -64,13 +64,16 @@ class Learner(mp.Process):
             self.archive_dir = self._DEFAULT_ARCHIVE_DIR
             if self.archive_dir.is_dir():
                 self.log.error(
-                    "Learner archive directory already exists, terminate as there is risk in undecided overwrite"
+                    f"Learner archive directory already exists at {self.archive_dir}, terminate as there is risk in undecided overwrite"
                 )
                 raise ValueError
+            else:
+                self.log.info(f"Create lerner archive: {self.archive_dir}")
+                self.archive_dir.mkdir()
         else:
             self.archive_dir = Path(learner_archive_dir)
             if self.archive_dir.is_dir():
-                self.log(
+                self.log.info(
                     "Given learner archive directory already exists, load all the attributes"
                 )
                 self.load_archive()
@@ -138,7 +141,7 @@ class Learner(mp.Process):
             self.worst_index = run_index
 
         # backup to archive
-        self.save_to_archive()
+        self.save_archive()
 
 
 # %%
@@ -219,7 +222,7 @@ class GaussianProcessLearner(Learner):
                 self.noise_level_bounds = safe_cast_to_array(noise_level_bounds)
 
     def run(self):
-        self.log("Run GP learner")
+        self.log.info("Run GP learner")
         while not self.end_event.is_set():
             self.get_params_and_costs()
             self.fit_gaussian_process()

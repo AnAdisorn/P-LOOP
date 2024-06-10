@@ -43,7 +43,7 @@ class Controller:
         self.best_cost = float("inf")
         self.best_uncer = float("nan")
         self.best_run_index = float("nan")
-        self.best_extras
+        self.best_extras = float("nan")
 
         # Variables that are used internally
         # curr-prefix means current data from interface
@@ -92,7 +92,7 @@ class Controller:
         else:
             self.archive_dir = Path(controller_archive_dir)
             if self.archive_dir.is_dir():
-                self.log(
+                self.log.info(
                     "Given controller archive directory already exists, load all the attributes"
                 )
                 self.load_archive()

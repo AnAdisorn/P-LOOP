@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import threading
+import logging
 
 
 class ManagerInterface(threading.Thread):
@@ -7,6 +8,9 @@ class ManagerInterface(threading.Thread):
     def __init__(self, workerinterface=None, num_workers=1, **kwargs):
 
         super(ManagerInterface, self).__init__()
+
+        # Make logger
+        self.log = logging.getLogger(__name__)
 
         # Queues to share with worker
         self.params_out_queue = mp.Queue()
@@ -20,18 +24,16 @@ class ManagerInterface(threading.Thread):
             self.workerinterface = workerinterface
 
         self.num_workers = num_workers
-        self.workers = []
+        self.workers = []  # list of workers interface
 
         self.remaining_kwargs = kwargs
 
     def _set_up(self):
         """Setup and share Queues to Workers"""
         for _ in range(self.num_workers):
-            self.workers.append(
-                self.workerinterface(
-                    self.params_out_queue, self.costs_in_queue, self.end_event
-                )
-            )
+            worker = self.workerinterface()
+            worker.set_up_queue(self.params_out_queue, self.costs_in_queue, self.end_event)
+            self.workers.append(self.workerinterface())
 
     def _start_up(self):
         for worker in self.workers:
@@ -54,15 +56,10 @@ class WorkerInterface(mp.Process):
 
     """
 
-    def __init__(
-        self,
-        params_out_queue,
-        costs_in_queue,
-        end_event,
-    ):
-
+    def __init__(self):
         super(WorkerInterface, self).__init__()
 
+    def set_up_queue(self, params_out_queue, costs_in_queue, end_event):
         self.params_out_queue = params_out_queue
         self.costs_in_queue = costs_in_queue
         self.end_event = end_event
