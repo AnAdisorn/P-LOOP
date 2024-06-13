@@ -33,12 +33,13 @@ def safe_cast_to_array(in_array):
 def save_archive_dict(archive_dir:Path, save_dict, save_name):
     np.save(archive_dir/save_name, save_dict)
 
-def load_archive_dict(archive_dir:Path, save_name):
+def load_archive_dict(archive_dir, save_name):
+    archive_dir = Path(archive_dir)
     return np.load(archive_dir / save_name, allow_pickle=True).item()
 
 # Cluster
 def send_to_cluster(
-    run_index, slurm_template_path, job_name, project_dir, execution_command, results_dir, slurm_dir=None
+    run_index, slurm_template_path, job_name, project_dir, execution_command, params, results_dir, slurm_dir=None
 ):
     """
     This function submits a job to a cluster using a provided SLURM template.
@@ -66,6 +67,15 @@ def send_to_cluster(
     project_dir = Path(project_dir)
     results_dir = Path(results_dir)
 
+    # Create run_dir to contain run.sh and params.npy
+    run_dir = Path.cwd() / f"run_{run_index}"
+    run_dir.mkdir()
+    run_sh = run_dir / "run.sh"
+
+    # Covert params to params.npy, this will be copies to cluster
+    params_file = run_dir/"params.npy"
+    np.save(params_file, params)
+
     # Configure job parameters
     # Read the contents of the SLURM template file
     with open(slurm_template_path, "r") as f:
@@ -75,19 +85,17 @@ def send_to_cluster(
     slurm = slurm.replace("<job_name>", job_name)
     slurm = slurm.replace("<slurm_dir>", str(slurm_dir))
     slurm = slurm.replace("<project_dir>", str(project_dir))
+    slurm = slurm.replace("<run_dir>", str(run_dir))
     slurm = slurm.replace("<execution_command>", execution_command)
     slurm = slurm.replace("<results_dir>", str(results_dir))
 
-    # Write the configured script to a 'run.sh' file in the current working directory
-    run_dir = Path.cwd() / f"run_{run_index}"
-    run_dir.mkdir()
-    run_sh = run_dir / "run.sh"
+    # Write the configured script to a 'run.sh' file in the run_{run_index} directory
     with open(run_sh, "w") as f:
         f.write(slurm)
 
     # Submit the job using sbatch and capture the standard output
     sbatch_stdout = subprocess.run(
-        ["sbatch", "run.sh"], capture_output=True, text=True
+        ["sbatch", str(run_sh)], capture_output=True, text=True
     ).stdout
 
     # Extract the job ID from the last element of the sbatch output after splitting on spaces
@@ -105,8 +113,9 @@ def send_to_cluster(
         if output_dir.is_dir():  # Check if the output directory exists
             if output_file.is_file():  # Check if the file is completely copied
                 output = np.load(output_file)  # Load the output as a NumPy array
-                # Move the 'run.sh' script to the output directory for better organization
-                os.rename(run_sh, output_dir / "run.sh")
+                # Move the 'run.sh' script and params.npy to the output directory for better organization
+                run_sh.rename(output_dir / "run.sh")
+                params_file.rename(output_dir / "params.npy")
                 # Remove run directory
                 run_dir.rmdir()
                 return output

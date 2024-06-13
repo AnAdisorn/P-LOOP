@@ -46,6 +46,7 @@ module load python/3.10.5
 
 # Set variables you need
 project="<project_dir>"
+run_dir="<run_dir>"
 results="<results_dir>"
 scratch="/scratch/$USER/$SLURM_JOB_ID"
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
@@ -59,6 +60,8 @@ mkdir result
 
 # Copy your program (and maybe input files if you need them)
 cp -r $project/* .
+# Copy params.npy
+cp $run_dir/"params.npy" .
 
 <execution_command>
 
