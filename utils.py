@@ -80,7 +80,7 @@ def send_to_cluster(
 
     # Write the configured script to a 'run.sh' file in the current working directory
     run_dir = Path.cwd() / f"run_{run_index}"
-    os.mkdir(run_dir)
+    run_dir.mkdir()
     run_sh = run_dir / "run.sh"
     with open(run_sh, "w") as f:
         f.write(slurm)
