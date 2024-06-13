@@ -230,6 +230,7 @@ class Controller:
 
         # backup to archive
         self.save_to_archive()
+        print(f"Get params: {self.curr_params}, Cost: {self.curr_cost:.3e}")
 
     def _send_to_learner(self):
         """

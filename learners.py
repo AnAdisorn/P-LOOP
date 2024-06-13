@@ -168,7 +168,7 @@ class GaussianProcessLearner(Learner):
         super(GaussianProcessLearner, self).__init__(**kwargs)
 
         # Internal variable for bias function
-        self.search_precision = 1.0e-6
+        self.search_precision = 1e-6
         self.parameter_searches = max(10, self.num_params)
         self.hyperparameter_searches = max(10, self.num_params)
         self.bias_func_cycle = num_workers
