@@ -46,12 +46,16 @@ module load python/3.10
 
 # Set variables you need
 project="<project_dir>"
+results="<results_dir>"
 scratch="/scratch/$USER/$SLURM_JOB_ID"
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 #Create your scratch space
 mkdir -p $scratch
 cd $scratch
+
+#Create result dir for outputs
+mkdir result
 
 # Copy your program (and maybe input files if you need them)
 cp $project/ .
@@ -60,7 +64,7 @@ cp $project/ .
 
 # copy results to an accessable location
 # only copy things you really need
-cp -r results $project/results/$SLURM_JOB_ID 
+cp -r result $results/$SLURM_JOB_ID
 
 # Clean up after yourself
 cd
