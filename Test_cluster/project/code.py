@@ -5,7 +5,6 @@ result_dir = Path.cwd() / "result"
 #%%
 def foo():
     save_path = result_dir / "output.npy"
-    print("save_path")
     np.save(save_path, np.zeros(1))
 
 if __name__ == "__main__":

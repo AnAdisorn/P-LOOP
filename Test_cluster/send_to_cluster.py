@@ -2,6 +2,7 @@
 import subprocess
 import numpy as np
 from pathlib import Path
+import os
 import time
 
 # %%
@@ -28,7 +29,8 @@ def send_to_cluster(
     slurm = slurm.replace("<execution_command>", execution_command)
     slurm = slurm.replace("<results_dir>", str(results_dir))
     # write a run.sh file
-    with open(Path.cwd() / "run.sh", "w") as f:
+    run_sh = Path.cwd() / "run.sh"
+    with open(run_sh, "w") as f:
         f.write(slurm)
 
     sbatch_stdout = subprocess.run(
@@ -36,12 +38,14 @@ def send_to_cluster(
     ).stdout
     # Extract job id from submit message
     slurm_job_id = sbatch_stdout.split()[-1]
-    output_file = results_dir/slurm_job_id/"output.npy"
+    output_dir = results_dir/slurm_job_id
+    output_file = output_dir/"output.npy"
 
     # Get output from results folder
     while True:
         if output_file.is_file(): # output file exists now
             output = np.load(output_file)
+            os.rename(run_sh, output_dir/"run.sh")
             return output
         time.sleep(1) # not get the file sleep a little bit
 
