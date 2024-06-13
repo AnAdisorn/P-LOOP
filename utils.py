@@ -49,7 +49,7 @@ def send_to_cluster(
         project_dir (str): Path to the project directory.
         execution_command (str): The command to execute on the cluster.
         results_dir (str): Path to the directory where results will be saved.
-        slurm_dir (str, optional): Path to the directory for SLURM scripts. Defaults to None.
+        slurm_dir (str, optional): Path to the directory for SLURM errors and outputs. Defaults to None.
 
     Returns:
         np.ndarray: The loaded output file as a NumPy array.
