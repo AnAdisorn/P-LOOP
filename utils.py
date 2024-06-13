@@ -97,6 +97,7 @@ def send_to_cluster(
     output_file = output_dir / "output.npy"
 
     # Loop until the output file is available
+    not_found_count = 0
     while True:
         if output_dir.is_dir():  # Check if the output directory exists
             if output_file.is_file():  # Check if the file is completely copied
@@ -105,8 +106,11 @@ def send_to_cluster(
                     # Move the 'run.sh' script to the output directory for better organization
                     os.rename(run_sh, output_dir / "run.sh")
                     return output
-                except NameError:
-                    raise NameError(f"{str(output_file)} doesn't exist.")
+                except FileNotFoundError:
+                    if not_found_count > 3:
+                        raise NameError(f"No such file or directory: {str(output_file)}")
+                    else:
+                        time.sleep(1)  # Wait a bit, maybe the file is copying
         else:
             # If the file isn't there yet, wait for a bit before checking again
             time.sleep(1)
