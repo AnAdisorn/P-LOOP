@@ -38,12 +38,13 @@ def load_archive_dict(archive_dir:Path, save_name):
 
 # Cluster
 def send_to_cluster(
-    slurm_template_path, job_name, project_dir, execution_command, results_dir, slurm_dir=None
+    run_index, slurm_template_path, job_name, project_dir, execution_command, results_dir, slurm_dir=None
 ):
     """
     This function submits a job to a cluster using a provided SLURM template.
 
     Args:
+        run_index (int): Runing index, to prevent overwriting run.sh when running multiple nodes
         slurm_template_path (str): Path to the SLURM template file.
         job_name (str): Name for the submitted job.
         project_dir (str): Path to the project directory.
@@ -78,7 +79,9 @@ def send_to_cluster(
     slurm = slurm.replace("<results_dir>", str(results_dir))
 
     # Write the configured script to a 'run.sh' file in the current working directory
-    run_sh = Path.cwd() / "run.sh"
+    run_dir = Path.cwd() / f"run_{run_index}"
+    os.mkdir(run_dir)
+    run_sh = run_dir / "run.sh"
     with open(run_sh, "w") as f:
         f.write(slurm)
 
@@ -104,6 +107,8 @@ def send_to_cluster(
                 output = np.load(output_file)  # Load the output as a NumPy array
                 # Move the 'run.sh' script to the output directory for better organization
                 os.rename(run_sh, output_dir / "run.sh")
+                # Remove run directory
+                run_dir.rmdir()
                 return output
             else:
                 if file_not_found_count > 3:
