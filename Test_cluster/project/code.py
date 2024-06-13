@@ -2,8 +2,11 @@ import numpy as np
 from pathlib import Path
 
 result_dir = Path.cwd() / "result"
-result_dir.mkdir()
-
-
+#%%
 def foo():
-    np.save(result_dir / "test", np.zeros(1))
+    save_path = result_dir / "output.npy"
+    print("save_path")
+    np.save(save_path, np.zeros(1))
+
+if __name__ == "__main__":
+    foo()

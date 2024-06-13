@@ -25,14 +25,14 @@
 # Feel free to give your job a good name to better identify it later
 # the same name expansions as for the ourput and error path apply here as well
 # see below for additional information
-#SBATCH --job-name="<job_name>"
+#SBATCH --job-name="test"
 
 # Always try to use absolute paths for your output and error files
 # IF you only specify an output file all error messages will automaticly be redirected in there
 # You can utilize name expansion to make sure each job has a uniq output file if the file already exists 
 # Slurm will delete all the content that was there before before writing to this file so beware.
-#SBATCH --output=<slurm_dir>/output/<job_name>-%j.out
-#SBATCH --error=<slurm_dir>/errors/<job_name>-%j.err
+#SBATCH --output=/home/adisorn/Desktop/Codes/bayesianoptimisation/Test_cluster/slurms/output/test-%j.out
+#SBATCH --error=/home/adisorn/Desktop/Codes/bayesianoptimisation/Test_cluster/slurms/errors/test-%j.err
 
 #
 # Prepare your environment
@@ -45,8 +45,8 @@ set -e
 module load python/3.10.5
 
 # Set variables you need
-project="<project_dir>"
-results="<results_dir>"
+project="/home/adisorn/Desktop/Codes/bayesianoptimisation/Test_cluster/project"
+results="/home/adisorn/Desktop/Codes/bayesianoptimisation/Test_cluster/results"
 scratch="/scratch/$USER/$SLURM_JOB_ID"
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
@@ -60,7 +60,7 @@ mkdir result
 # Copy your program (and maybe input files if you need them)
 cp -r $project/* .
 
-<execution_command>
+python3 code.py
 
 # copy results to an accessable location
 # only copy things you really need
