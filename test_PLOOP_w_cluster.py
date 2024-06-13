@@ -22,19 +22,23 @@ class CustomInterface(WorkerInterface):
     # You must include the get_next_cost_dict method in your class
     # this method is called whenever P-LOOP wants to run an experiment
     def get_next_cost_dict(self, params_dict):
-        # extract information from params_dict
-        params = params_dict["params"]
-        run_index = params_dict["run_index"]
-        
         # prepare parameters to send to cluster
-        slurm_template = Path.cwd() / "Test_cluster/template.sh"
+        slurm_template_path = Path.cwd() / "Test_cluster/template.sh"
         job_name = "rastrigin"
         project_dir = Path.cwd() / "Test_cluster/project_rastrigin"
         execution_command = f"python3 cost.py"
         results_dir = Path.cwd() / "Test_cluster/results_rastrigin"
         slurms_dir = Path.cwd() / "Test_cluster/slurms_rastrigin"
         # calculate cost in cluster
-        cost = send_to_cluster(run_index, slurm_template, job_name, project_dir, execution_command, params, results_dir, slurms_dir)
+        cost = send_to_cluster(
+            params_dict,
+            slurm_template_path,
+            job_name,
+            project_dir,
+            execution_command,
+            results_dir,
+            slurms_dir,
+        )
 
         # return simple cost_dict
         cost_dict = {"cost": cost}

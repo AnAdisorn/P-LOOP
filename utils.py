@@ -39,13 +39,13 @@ def load_archive_dict(archive_dir, save_name):
 
 # Cluster
 def send_to_cluster(
-    run_index, slurm_template_path, job_name, project_dir, execution_command, params, results_dir, slurm_dir=None
+    params_dict, slurm_template_path, job_name, project_dir, execution_command, results_dir, slurm_dir=None
 ):
     """
     This function submits a job to a cluster using a provided SLURM template.
 
     Args:
-        run_index (int): Runing index, to prevent overwriting run.sh when running multiple nodes
+        params_dict (dictionary): A dictionary containing the parameters and run's index.
         slurm_template_path (str): Path to the SLURM template file.
         job_name (str): Name for the submitted job.
         project_dir (str): Path to the project directory.
@@ -56,6 +56,8 @@ def send_to_cluster(
     Returns:
         np.ndarray: The loaded output file as a NumPy array.
     """
+    # Extract params and run_index from params_dict
+    params, run_index = params["params"], params["run_index"]
 
     # Convert all directories to Path type for easier manipulation
     slurm_template_path = Path(slurm_template_path)
