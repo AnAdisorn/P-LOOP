@@ -57,7 +57,7 @@ def send_to_cluster(
         np.ndarray: The loaded output file as a NumPy array.
     """
     # Extract params and run_index from params_dict
-    params, run_index = params["params"], params["run_index"]
+    params, run_index = params_dict["params"], params_dict["run_index"]
 
     # Convert all directories to Path type for easier manipulation
     slurm_template_path = Path(slurm_template_path)
