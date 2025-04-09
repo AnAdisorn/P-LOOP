@@ -33,7 +33,9 @@ class ManagerInterface(threading.Thread):
         """Setup and share Queues to Workers"""
         for _ in range(self.num_workers):
             worker = self.workerinterface()
-            worker.set_up_queue(self.params_out_queue, self.costs_in_queue, self.end_event)
+            worker.set_up_queue(
+                self.params_out_queue, self.costs_in_queue, self.end_event
+            )
             self.workers.append(worker)
 
     def _start_up(self):

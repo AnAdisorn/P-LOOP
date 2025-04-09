@@ -1,6 +1,7 @@
 from interfaces import ManagerInterface, WorkerInterface
 from learners import Learner, GaussianProcessLearner
 from utils import rng, save_archive_dict, load_archive_dict
+import numpy as np
 import logging
 import datetime
 from pathlib import Path
@@ -19,6 +20,7 @@ class Controller:
         num_params,
         min_boundary,
         max_boundary,
+        seeds=None,
         max_num_runs=float("+inf"),
         target_cost=float("-inf"),
         max_num_runs_without_better_params=float("+inf"),
@@ -61,6 +63,7 @@ class Controller:
         self.managerinterface = ManagerInterface(
             workerinterface=workerinterface, **kwargs
         )
+        self.num_workers = self.managerinterface.num_workers
         self.params_out_queue = self.managerinterface.params_out_queue
         self.costs_in_queue = self.managerinterface.costs_in_queue
         self.end_managerinterface = self.managerinterface.end_event
@@ -69,6 +72,36 @@ class Controller:
         self.num_params = num_params
         self.min_boundary = min_boundary
         self.max_boundary = max_boundary
+        self.seeds = np.asarray(seeds)
+        self.num_seeds = None
+        # validate seeds
+        seeds_ndim = self.seeds.ndim
+        seeds_num_params = None
+        if seeds_ndim == 1:
+            self.num_seeds = 1
+            seeds_num_params = self.seeds.shape[0]
+            for i, val in enumerate(self.seeds):
+                if not (self.min_boundary[i] <= val <= self.max_boundary[i]):
+                    self.log.error(
+                        f"Seed's value is out of bound: Seed[{i}] = {val} whre bounds are [{self.min_boundary[i]},{self.max_boundary[i]}]"
+                    )
+        elif seeds_ndim == 2:
+            self.num_seeds = self.seeds.shape[0]
+            seeds_num_params = self.seeds.shape[1]
+            for i, seed in enumerate(self.seeds):
+                for j, val in enumerate(seed):
+                    if not (self.min_boundary[j] <= val <= self.max_boundary[j]):
+                        self.log.error(
+                            f"Seed's value is out of bound: Seed[{i}][{j}] = {val} whre bounds are [{self.min_boundary[j]},{self.max_boundary[j]}]"
+                        )
+        else:
+            self.log.error(
+                f"Seeds have wrong number dimensions: seeds' ndim = {seeds_ndim}"
+            )
+        if seeds_num_params != self.num_params:
+            self.log.error(
+                f"Seeds have wrong number of parameters: seeds' shape = {self.seeds.shape}"
+            )
 
         # Connection with learner
         self.learner = learner(
@@ -100,7 +133,9 @@ class Controller:
                 )
                 self.load_archive()
             else:
-                self.log.error(f"Controller: cannot find archive directory: {self.archive_dir}")
+                self.log.error(
+                    f"Controller: cannot find archive directory: {self.archive_dir}"
+                )
 
         # Remaining kwargs
         self.remaining_kwargs = kwargs
@@ -230,7 +265,9 @@ class Controller:
 
         # backup to archive
         self.save_to_archive()
-        print(f"Get {self.num_in_costs}th params: {self.curr_params}, Cost: {self.curr_cost:.3e}")
+        print(
+            f"Get {self.num_in_costs}th params: {self.curr_params}, Cost: {self.curr_cost:.3e}"
+        )
 
     def _send_to_learner(self):
         """
@@ -263,10 +300,28 @@ class Controller:
 
     def _optimization_routine(self):
         next_params = self._first_params()
-        self._put_params_out_dict(next_params)
+        self._put_params_out_dict(next_params[: self.num_workers])
+        next_params = next_params[self.num_workers :]
+
+        # while _first_params are not empty, in case that seeds' params are more than
+        # number of interface workers
+        while next_params.size > 0:
+            # get cost from interface
+            self._get_cost_in_dict()
+            # send cost to learner but we will ignore new params
+            _ = self._next_params()
+            # use the param from _first_params
+            self._put_params_out_dict(next_params[:1])
+            next_params = next_params[1:]
+
         self._get_cost_in_dict()
         while self.check_end_conditions():
-            next_params = self._next_params()
+            if np.isnan(self.curr_cost):
+                # randomise new params
+                next_params = rng.random((1, self.num_params))
+                next_params = self.learner.params_scaler.inverse_transform(next_params)
+            else:
+                next_params = self._next_params()
             self._put_params_out_dict(next_params)
             self._get_cost_in_dict()
 
@@ -288,5 +343,21 @@ class GaussianProcessController(Controller):
         )
 
     def _first_params(self):
-        params = rng.random((self.managerinterface.num_workers, self.num_params))
-        return self.learner.params_scaler.inverse_transform(params)
+        if self.seeds is not None:
+            if self.num_seeds < self.num_workers:
+                random_params = rng.random(
+                    (
+                        self.num_workers - self.num_seeds,
+                        self.num_params,
+                    )
+                )
+                random_params = self.learner.params_scaler.inverse_transform(
+                    random_params
+                )
+            if self.num_seeds == 1:
+                return np.concatenate(([self.seeds], random_params))
+            else:
+                return np.concatenate((self.seeds, random_params))
+        else:
+            random_params = rng.random((self.num_workers, self.num_params))
+            return self.learner.params_scaler.inverse_transform(random_params)
