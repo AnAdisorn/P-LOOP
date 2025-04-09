@@ -5,7 +5,7 @@
 Parallelizable Bayesian optimisation framework.
 
 <!-- Example: [![Build Status](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/badges/main/pipeline.svg)](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/-/commits/main) -->
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) -->
+<!-- Example: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) -->
 
 ## Description
 
