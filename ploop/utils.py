@@ -30,16 +30,24 @@ def safe_cast_to_array(in_array):
     return out_array
 
 
-def save_archive_dict(archive_dir:Path, save_dict, save_name):
-    np.save(archive_dir/save_name, save_dict)
+def save_archive_dict(archive_dir: Path, save_dict, save_name):
+    np.save(archive_dir / save_name, save_dict)
+
 
 def load_archive_dict(archive_dir, save_name):
     archive_dir = Path(archive_dir)
     return np.load(archive_dir / save_name, allow_pickle=True).item()
 
+
 # Cluster
 def send_to_cluster(
-    params_dict, slurm_template_path, job_name, project_dir, execution_command, results_dir, slurm_dir=None
+    params_dict,
+    slurm_template_path,
+    job_name,
+    project_dir,
+    execution_command,
+    results_dir,
+    slurm_dir=None,
 ):
     """
     This function submits a job to a cluster using a provided SLURM template.
@@ -70,12 +78,12 @@ def send_to_cluster(
     results_dir = Path(results_dir)
 
     # Create run_dir to contain run.sh and params.npy
-    run_dir = Path.cwd() / f"run_{run_index}"
+    run_dir = Path.cwd() / f"runs/run_{run_index}"
     run_dir.mkdir()
     run_sh = run_dir / "run.sh"
 
     # Covert params to params.npy, this will be copies to cluster
-    params_file = run_dir/"params.npy"
+    params_file = run_dir / "params.npy"
     np.save(params_file, params)
 
     # Configure job parameters
@@ -123,7 +131,12 @@ def send_to_cluster(
                 return output
             else:
                 if file_not_found_count > 3:
-                    raise NameError(f"No such file or directory: {str(output_file)}")
+                    raise NameError(
+                        f"Cannot get output from directory: {str(output_file)}"
+                    )
+                    return (
+                        np.nan
+                    )  # Send nan value to tell controller to randomize new params
                 else:
                     file_not_found_count += 1
                     time.sleep(1)  # Wait a bit, maybe the file is copying

@@ -265,7 +265,7 @@ class Controller:
 
         # backup to archive
         self.save_to_archive()
-        print(
+        self.log.info(
             f"Get {self.num_in_costs}th params: {self.curr_params}, Cost: {self.curr_cost:.3e}"
         )
 
