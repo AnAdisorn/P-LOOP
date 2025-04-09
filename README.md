@@ -1,6 +1,7 @@
 # P-LOOP: Parallelizable Bayesian Optimisation
 
-[![PyPI version](https://img.shields.io/pypi/v/ploop.svg)](https://pypi.org/project/ploop/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- [![PyPI version](https://img.shields.io/pypi/v/ploop.svg)](https://pypi.org/project/ploop/)  -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Parallelizable Bayesian optimisation framework.
 
