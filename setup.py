@@ -73,7 +73,6 @@ setuptools.setup(
     #     "ploop": ["data/*.dat"],
     # },
     install_requires=INSTALL_REQUIRES,
-    extras_require=EXTRAS_REQUIRE,
     python_requires=PYTHON_REQUIRES,
     classifiers=[
         # How mature is this project? Common values are
