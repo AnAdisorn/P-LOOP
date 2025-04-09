@@ -1,16 +1,17 @@
 # P-LOOP: Parallelizable Bayesian Optimisation
 
+[![PyPI version](https://img.shields.io/pypi/v/ploop.svg)](https://pypi.org/project/ploop/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Parallelizable Bayesian optimisation framework.
 
-[**TODO: (Optional) Add badges here, e.g., build status, license, package version. Use services like shields.io.**]
 <!-- Example: [![Build Status](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/badges/main/pipeline.svg)](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/-/commits/main) -->
-<!-- Example: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) -->
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) -->
 
 ## Description
 
 Bayesian Optimisation is a powerful technique for optimizing expensive black-box functions. This project provides a parallelizable implementation designed to significantly speed up parameter optimization, especially for tasks with long evaluation times.
 
-### Features (Optional)
+### Features
 
 *   Parallel execution of objective function evaluations via worker processes.
 *   Gaussian Process based learner using `scikit-learn`.
