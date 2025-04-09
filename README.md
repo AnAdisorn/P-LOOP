@@ -1,12 +1,9 @@
 # P-LOOP: Parallelizable Bayesian Optimisation
 
-<!-- [![PyPI version](https://img.shields.io/pypi/v/ploop.svg)](https://pypi.org/project/ploop/)  -->
+<!-- [![PyPI version](https://img.shields.io/pypi/v/ploop.svg)](https://pypi.org/project/ploop/) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Parallelizable Bayesian optimisation framework.
-
-<!-- Example: [![Build Status](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/badges/main/pipeline.svg)](https://gitlab.pks.mpg.de/fs1/machine-learning/bayesianoptimisation/-/commits/main) -->
-<!-- Example: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) -->
 
 ## Description
 
@@ -29,7 +26,7 @@ Bayesian Optimisation is a powerful technique for optimizing expensive black-box
 
 *   Python >= 3.8
 *   pip (or your preferred package manager like conda)
-*   Core dependencies (typically installed automatically via `pip`):
+*   Core dependencies (listed in `requirements.txt`):
     *   `numpy>=1.20`
     *   `scipy>=1.7`
     *   `scikit-learn>=1.0`
@@ -42,21 +39,19 @@ Bayesian Optimisation is a powerful technique for optimizing expensive black-box
     cd P-LOOP
     ```
 
-2.  **Install the package and its dependencies:**
-    *   **Recommended (for development):** Install in editable mode. This links the installation to your source code, so changes are reflected immediately.
+2.  **Set up the environment:** Choose one of the following methods:
+
+    *   **Install Dependencies Only (using `requirements.txt`):** This is useful if you want to run scripts directly from the cloned repository or manage the environment without installing P-LOOP as a package.
         ```bash
-        pip install -e .
+        pip install -r requirements.txt
         ```
-    *   **Standard Installation:**
+    *   **Install P-LOOP as a Package (Standard):** This installs the package into your Python environment, making `import ploop` work system-wide (or in your virtual environment). It also installs all necessary dependencies listed in `setup.py`.
         ```bash
         pip install .
         ```
-    *   **(Alternative) Using requirements file (if you create one):**
+    *   **Install P-LOOP as an Editable Package (for Development):** This installs the package like the standard method, but links it directly to your source code folder. Changes you make to the code are immediately reflected without reinstalling. Ideal for developing P-LOOP itself.
         ```bash
-        # You would need to create a requirements.txt file first
-        # pip freeze > requirements.txt
-        # Then install using:
-        # pip install -r requirements.txt
+        pip install -e .
         ```
 
 ## Usage
